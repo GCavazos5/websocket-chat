@@ -6,38 +6,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat WebSocket</title>
   <style>
+    /* Estilos generales */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f1f9;
+      color: #4a4a4a;
       text-align: center;
-      margin: 20px;
+      margin: 0;
+      padding: 0;
     }
+
+    h2 {
+      color: #ff80ab;
+      margin-top: 20px;
+    }
+
+    /* Contenedor de los mensajes */
     #messages {
       margin-top: 20px;
       border: 1px solid #ddd;
-      padding: 10px;
-      width: 50%;
-      margin: auto;
-      height: 200px;
+      padding: 15px;
+      width: 60%;
+      margin: 20px auto;
+      height: 300px;
       overflow-y: auto;
+      background-color: #fff0f5;
+      border-radius: 10px;
     }
+
+    /* Estilos de los inputs y el botón */
     input, button {
-      padding: 10px;
+      padding: 12px;
       margin: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      width: 40%;
+      max-width: 400px;
     }
+
+    input:focus, button:focus {
+      outline: none;
+      border-color: #ff80ab;
+    }
+
+    /* Estilos del botón */
+    button {
+      background-color: #ff80ab;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ff66a1;
+    }
+
+    /* Estilos de los mensajes */
+    p {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0;
+      word-wrap: break-word;
+    }
+
+    /* Mensajes de usuario */
+    .user-message {
+      background-color: #ff80ab;
+      color: white;
+      text-align: right;
+    }
+
+    /* Mensajes de otros */
+    .other-message {
+      background-color: #f8bbd0;
+      color: #4a4a4a;
+      text-align: left;
+    }
+
   </style>
 </head>
 
 <body>
-  <h2>Chat en Tiempo Real con WebSockets</h2>
+  <h2>Chat WebSocket en Tiempo Real</h2>
 
   <input type="text" id="usernameInput" placeholder="Ingresa tu nombre..." />
   <br>
-  <input type="text" id="messageInput" placeholder="Escribe un mensaje..." />
-  <button onclick="sendMessage()">Enviar</button>
+  <input type="text" id="messageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key === 'Enter'){sendMessage()}">
   <div id="messages"></div>
+
   <script>
-    // Reemplaza con la URL que te da Ngrok
-    const socket = new WebSocket('https://ff0b-187-190-223-167.ngrok-free.app');
+    // Conexión al servidor WebSocket
+    const socket = new WebSocket('wss://ff0b-187-190-223-167.ngrok-free.app');
 
     socket.addEventListener('open', function () {
       console.log('Conectado al servidor WebSocket');
@@ -49,11 +110,11 @@
       if (data.type === 'history') {
         // Mostrar mensajes previos al conectarse
         data.messages.forEach(mensaje => {
-          agregarMensaje(mensaje);
+          agregarMensaje(mensaje, 'other-message');
         });
       } else if (data.type === 'message') {
         // Mostrar mensaje en tiempo real
-        agregarMensaje(data.message);
+        agregarMensaje(data.message, 'other-message');
       }
     });
 
@@ -63,14 +124,22 @@
       const username = document.getElementById('usernameInput').value || 'Usuario desconocido';
 
       if (message) {
+        // Enviar mensaje al servidor
         socket.send(JSON.stringify({ username: username, message: message }));
-        inputMessage.value = '';
+
+        // Agregar el mensaje al chat
+        agregarMensaje(`Tú: ${message}`, 'user-message');
+        inputMessage.value = '';  // Limpiar el campo de entrada
       }
     }
 
-    function agregarMensaje(mensaje) {
+    function agregarMensaje(mensaje, clase) {
       const messagesDiv = document.getElementById('messages');
-      messagesDiv.innerHTML += `<p><strong>${mensaje}</strong></p>`;
+      const p = document.createElement('p');
+      p.classList.add(clase);
+      p.textContent = mensaje;
+      messagesDiv.appendChild(p);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Desplazarse al final
     }
   </script>
 
